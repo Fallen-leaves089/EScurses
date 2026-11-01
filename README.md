@@ -1,5 +1,5 @@
 # EScurses Home Page
-![EScurses Icon](./Icon/EScursesIcon64x64.png) 
+![EScurses Icon](./Icon/EScursesIcon64x64.png)   
  **首页**
 
 [跳转至中文README](./README-zh.md)
