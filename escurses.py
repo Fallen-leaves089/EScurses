@@ -1,5 +1,6 @@
 import sys
-import os, subprocess
+import os
+import ctypes
 import time
 if os.name == 'posix':
     import termios, tty, select
@@ -11,6 +12,13 @@ _screenWidth = None
 _screenHeight = None
 
 _frameStartTime = None
+
+COLORDEFAULT = 0
+COLORRED = 31
+COLORGREEN = 32
+COLORYELLOW = 33
+COLORBLUE = 34
+
 def frameStart():
     global _frameStartTime
     _frameStartTime = time.perf_counter()
@@ -21,29 +29,27 @@ def linuxTerminalCheck():
 
 def getTerminalSize():
     scrSize = os.get_terminal_size()
-    maxX = scrSize.columns
-    maxY = scrSize.lines
-    return (maxX, maxY)
+    return (scrSize.columns, scrSize.lines)
 
 def initGame():
     scrSize = getTerminalSize()
-    global _screenWidth
-    global _screenHeight
+    global _screenWidth, _screenHeight, _screen
     _screenWidth = scrSize[0]
     _screenHeight = scrSize[1]
-    global _screen
     _screen = []
-    for i in range(_screenHeight):
-        _screen.append([(' ', i+1, j+1) for j in range(_screenWidth - 1)])
-def clear():
-    sys.stdout.write('\033[2J')
-    global _screen
-    _screen = []
-    for i in range(_screenHeight):
-        _screen.append([(' ', i+1, j+1) for j in range(_screenWidth - 1)])
+    for i in range(_screenHeight):        
+        _screen.append([(' ', i+1, j+1) for j in range(_screenHeight)])
+    sys.stdout.write("\033[?1049l")
 
-def drawChar(x, y, char):
-    _screen[y-1][x-1] = (char, y, x)
+def clear():
+    sys.stdout.write('\033[2J\033[H')
+    global _screen
+    _screen = []
+    for i in range(_screenHeight):
+            _screen.append([(' ', i+1, j+1, COLORDEFAULT) for j in range(_screenWidth - 1)])
+
+def drawChar(x, y, char, color = COLORDEFAULT):
+    _screen[y-1][x-1] = (char, y, x, color)
 
 def getch(nodelay=True):
     if os.name == 'nt':
@@ -79,7 +85,9 @@ def getch(nodelay=True):
 def refresh():
     for line in _screen:
         for char in line:
+            sys.stdout.write(f'\033[{char[3]}m')
             sys.stdout.write(f'\033[{char[1]};{char[2]}H{char[0]}')
+            sys.stdout.write('\033[0m')
     sys.stdout.flush()
 
 def cursorEcho(echo=False):
@@ -90,8 +98,7 @@ def cursorEcho(echo=False):
 
 def exitGame():
     sys.stdout.write('\033[?25h')
-    if os.name == 'nt': subprocess.run("cls", shell=True)
-    if os.name == 'posix': subprocess.run("clear", shell=True)
+    sys.stdout.write("\033[?1049h")
     sys.stdout.flush()
     sys.exit()
 
