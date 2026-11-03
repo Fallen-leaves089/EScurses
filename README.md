@@ -16,6 +16,6 @@
     Overrided some APIs, and you also can use the original style(called 1.0 API) to code, or using the new style(called 2.0 API)
   - **EScurses-h** (By Jej1111064): https://github.com/Jej1111064/EScurses-h
     If it has new feauture or fixed bug, I will write it on here\
-  **And other fork you also can look for it!**
-  I can't write too many fork because that's to tiring.
+  **And other fork you also can look for it!**  
+  I can't write too many fork because that's to tiring.  
   And thank you all!
