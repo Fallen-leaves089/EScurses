@@ -93,11 +93,9 @@ def getch(nodelay=True):
                 ch = sys.stdin.read(1)
                 return ch
             return None
-            termios.tcsetattr(_fd, termios.TCSADRAIN, _oldSettings)
         elif not nodelay:
             ch = sys.stdin.read(1)
             return ch
-            termios.tcsetattr(_fd, termios.TCSADRAIN, _oldSettings)
 
 def refresh():
     global _previousDirtyRowIndexs
