@@ -2,7 +2,7 @@
  **首页**
 
 ![EScurses Icon](./Icon/EScursesIcon64x64.png)   
-**EScurses By KID194 (A fifth grader)**
+**EScurses By KID194 (A fifth grader)**  
 EScurses By KID194 (一个五年级的小学生)
  
 
