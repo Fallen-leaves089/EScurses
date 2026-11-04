@@ -88,8 +88,8 @@ def getch(nodelay=True):
             return ch
     elif os.name == 'posix':
         if nodelay:
-            tty.setcbreak(fd)
-            if select.select([fd], [], [], 0):
+            tty.setcbreak(_fd)
+            if select.select([_fd], [], [], 0):
                 ch = sys.stdin.read(1)
                 return ch
             return None
