@@ -30,8 +30,8 @@ Then there are the following functions
   - **`initGame()`**
     It is responsible for initializing `_maxScreenWidth` and `_maxScreenHeight`. Of course, I don't recommend using these two variables directly for your game—they're internal variables
   - **`clear()`**
-    Very simple—it clears the screen, but it seems it's not that simple after all
-    It contains a new variant of dirty-rectangle rendering that I invented myself: dirty-rectangle clearing
+    Very simple—it clears the screen, but it seems it's not that simple after all  
+    It contains a new variant of Dirty-Rectangle Rendering that I invented myself: Dirty-Rectangle Clearing  
     Simply put, it records which rows were dirty rows just now, and when called, it clears those dirty rows
   - **`getch(nodelay=True)`**
     One of the hardest things to implement, because it includes both Windows input and Linux input, and both systems' input have separate blocking and non-blocking versions, controlled by the `nodelay` parameter, which defaults to `True`
