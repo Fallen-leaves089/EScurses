@@ -2,7 +2,7 @@ import sys
 import os
 import time
 if os.name == 'posix':
-    import termios, tty, select
+    import select, termios, tty
 if os.name == 'nt':
     import msvcrt
 
@@ -13,8 +13,9 @@ _screenHeight = None
 _frameStartTime = None
 _dirtyRowIndexs = set()
 _previousDirtyRowIndexs = set()
-_oldSettings = None
 _fd = None
+_oldSettings = None
+_currentKey = None
 
 COLORDEFAULT = 0
 COLORRED = 31
@@ -49,11 +50,11 @@ def initGame():
     for i in range(_screenHeight):        
         _screen.append([(' ', i+1, j+1) for j in range(_screenHeight)])
     sys.stdout.write("\033[?1049l\033[2J")
-    global _oldSettings
     if os.name == 'posix':
-        global _fd
+        global _oldSettings, _fd
         _fd = sys.stdin.fileno()
         _oldSettings = termios.tcgetattr(_fd)
+        tty.setcbreak(_fd)
 
 def clear():
     sys.stdout.write('\033[1;1H')
@@ -88,17 +89,16 @@ def getch(nodelay=True):
             return ch
     elif os.name == 'posix':
         if nodelay:
-            tty.setcbreak(_fd)
-            if select.select([_fd], [], [], 0):
-                ch = sys.stdin.read(1)
-                return ch
+            if select.select([_fd], [], [], 0)[0]:
+                key = os.read(_fd, 1)
+                return key.decode('utf-8')
             return None
         elif not nodelay:
-            ch = sys.stdin.read(1)
-            return ch
+            ch = os.read(_fd, 1)
+            return ch.decode('utf-8')
 
 def refresh():
-    global _previousDirtyRowIndexs
+    global _previousDirtyRowIndexs, _currentKey
     _previousDirtyRowIndexs = _dirtyRowIndexs.copy()
     for rowIndex in _dirtyRowIndexs:
         row = _screen[rowIndex]
@@ -115,6 +115,7 @@ def refresh():
         sys.stdout.write(f'\033[{rowIndex+1};1H' + rowWillOutput)
     _dirtyRowIndexs.clear()
     sys.stdout.flush()
+    _currentKey = None
 
 def cursorEcho(echo=False):
     if echo:
