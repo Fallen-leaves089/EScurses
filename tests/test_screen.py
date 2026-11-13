@@ -176,6 +176,20 @@ class TestTransform:
         assert smaller.size == (5, 2)
         assert smaller.to_text() == "     \n     "
 
+    def test_resize_drops_truncated_wide_char(self):
+        screen = Screen(5, 1)
+        screen.put(3, 0, "界")
+        smaller = screen.resize(4, 1)
+        assert smaller.get(3, 0)[0] == " "
+        assert smaller.to_text() == "    "
+
+    def test_resize_keeps_complete_wide_char(self):
+        screen = Screen(5, 1)
+        screen.put(2, 0, "界")
+        smaller = screen.resize(4, 1)
+        assert smaller.get(2, 0)[0] == "界"
+        assert smaller.get(3, 0)[0] == ""
+
     def test_apply_resize_keeps_identity(self, screen):
         screen.put(0, 0, "abc")
         original_id = id(screen)

@@ -16,7 +16,7 @@ from typing import Iterable, List, Set, Tuple
 
 from .color import Style
 from .exceptions import ScreenBoundsError
-from .textutil import clusters, sanitize
+from .textutil import clusters, sanitize, text_width
 
 __all__ = ["Screen", "CONT"]
 
@@ -278,6 +278,10 @@ class Screen:
                 src = self._cells[y * self.width: y * self.width + copy_w]
                 dst = y * width
                 new._cells[dst: dst + copy_w] = list(src)
+                last = new._cells[dst + copy_w - 1]
+                if width < self.width and last[0] and text_width(last[0]) == 2:
+                    # 缩窗时右边界可能只留下宽字符的前半格，后半格已经被裁掉。
+                    new._cells[dst + copy_w - 1] = new._blank()
         new.mark_all_dirty()
         return new
 

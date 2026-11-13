@@ -125,11 +125,23 @@ class Color:
     * :meth:`Color.rgb`   —— 24 位真彩。
     """
 
-    __slots__ = ("kind", "value")
+    __slots__ = ("kind", "value", "_frozen")
 
     def __init__(self, kind: str, value: object) -> None:
-        self.kind = kind
-        self.value = value
+        object.__setattr__(self, "_frozen", False)
+        object.__setattr__(self, "kind", kind)
+        object.__setattr__(self, "value", value)
+        object.__setattr__(self, "_frozen", True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Color 不可变；请创建新的 Color 实例")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name: str) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Color 不可变；请创建新的 Color 实例")
+        object.__delattr__(self, name)
 
     # ---- 工厂 ----------------------------------------------------------
     @classmethod
@@ -279,11 +291,18 @@ class Color:
 def _rgb_to_256(r: int, g: int, b: int) -> int:
     # 灰阶（r == g == b）走 232-255 的 24 级灰阶，比 6x6x6 色立方更准
     if r == g == b:
-        if r < 8:
-            return 16
-        if r > 248:
+        # 同时考虑黑色（16）和白色（231）；灰阶索引本身只到 255。
+        best_index = 16
+        best_distance = r
+        for step in range(24):
+            level = 8 + step * 10
+            distance = abs(r - level)
+            if distance < best_distance:
+                best_index = 232 + step
+                best_distance = distance
+        if 255 - r < best_distance:
             return 231
-        return 232 + (r - 8) // 10
+        return best_index
     steps = (0, 95, 135, 175, 215, 255)
     ri = min(range(6), key=lambda i: abs(steps[i] - r))
     gi = min(range(6), key=lambda i: abs(steps[i] - g))
@@ -330,6 +349,7 @@ class Style:
         "reverse",
         "strike",
         "_cache",
+        "_frozen",
     )
 
     def __init__(
@@ -345,6 +365,7 @@ class Style:
         reverse: bool = False,
         strike: bool = False,
     ) -> None:
+        object.__setattr__(self, "_frozen", False)
         self.fg = Color.parse(fg) if fg is not None else Color.default()
         self.bg = Color.parse(bg) if bg is not None else Color.default()
         self.bold = bold
@@ -355,6 +376,17 @@ class Style:
         self.reverse = reverse
         self.strike = strike
         self._cache: Dict[int, str] = {}
+        object.__setattr__(self, "_frozen", True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Style 不可变；请使用 replace() 创建新样式")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name: str) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Style 不可变；请使用 replace() 创建新样式")
+        object.__delattr__(self, name)
 
     # ---- 工厂 ----------------------------------------------------------
     @classmethod
@@ -364,7 +396,7 @@ class Style:
         给想直接手写转义序列的高级用户留的口子。
         """
         style = cls()
-        style._cache = {0: str(spec), 1: str(spec), 2: str(spec), 3: str(spec)}
+        style._cache.update({0: str(spec), 1: str(spec), 2: str(spec), 3: str(spec)})
         return style
 
     def replace(self, **changes: object) -> "Style":

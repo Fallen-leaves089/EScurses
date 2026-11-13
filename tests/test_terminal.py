@@ -73,6 +73,16 @@ class TestLifecycle:
         terminal.close()
         assert terminal.closed
 
+    def test_close_before_start_is_noop(self):
+        backend = MemoryBackend(10, 3)
+        terminal = Terminal(backend)
+        terminal.close()
+        assert not terminal.closed
+        assert backend.output == ""
+        terminal.start()
+        assert terminal.started
+        terminal.close()
+
     def test_context_manager(self):
         backend = MemoryBackend(10, 3)
         with Terminal(backend) as terminal:
@@ -321,6 +331,15 @@ class TestMisc:
         terminal.show_cursor(True)
         vt.feed(terminal.backend.take_output())
         assert vt.cursor_visible is True
+
+    def test_manual_cursor_hide_is_restored(self):
+        backend = MemoryBackend(10, 3)
+        terminal = Terminal(backend, hide_cursor=False)
+        terminal.start()
+        backend.take_output()
+        terminal.show_cursor(False)
+        terminal.close()
+        assert "\x1b[?25h" in backend.output
 
     def test_supports_color(self, session):
         terminal, _vt = session

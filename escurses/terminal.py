@@ -78,6 +78,7 @@ class Terminal:
 
         self._alt_screen = bool(alt_screen)
         self._hide_cursor = bool(hide_cursor)
+        self._cursor_visible = not self._hide_cursor
         self._clear_on_start = bool(clear_on_start)
         self._wrap = bool(wrap)
         self._title = title
@@ -183,6 +184,8 @@ class Terminal:
             setup.append(ANSI.title(sanitize(self._title, "")))
         if setup:
             self._write("".join(setup))
+        if self._hide_cursor:
+            self._cursor_visible = False
         self._terminal_blank = self._clear_on_start
 
         self._started = True
@@ -194,12 +197,15 @@ class Terminal:
         """恢复终端状态。可重复调用，不会抛异常。"""
         if self._closed:
             return
+        if not self._started:
+            return
         self._closed = True
         self._started = False
         try:
             restore = [ANSI.RESET]
-            if self._hide_cursor:
+            if not self._cursor_visible:
                 restore.append(ANSI.CURSOR_SHOW)
+                self._cursor_visible = True
             if not self._wrap:
                 restore.append(ANSI.AUTOWRAP_ON)
             if self._alt_screen:
@@ -352,6 +358,7 @@ class Terminal:
         """显示 / 隐藏光标。"""
         self._require_started("show_cursor")
         self._write(ANSI.CURSOR_SHOW if show else ANSI.CURSOR_HIDE)
+        self._cursor_visible = bool(show)
 
     def _require_started(self, name: str) -> None:
         if not self._started:
