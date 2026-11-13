@@ -90,6 +90,21 @@ class TestQuantisation:
         assert _rgb_to_256(0, 0, 0) == 16
         assert _rgb_to_256(255, 255, 255) == 231
 
+    def test_rgb_to_256_grey_never_exceeds_range(self):
+        for value in range(256):
+            assert 0 <= _rgb_to_256(value, value, value) <= 255
+
+    def test_rgb_to_256_grey_endpoints(self):
+        assert _rgb_to_256(7, 7, 7) == 232
+        assert _rgb_to_256(238, 238, 238) == 255
+        assert _rgb_to_256(247, 247, 247) == 231
+        assert _rgb_to_256(248, 248, 248) == 231
+        assert Color.rgb(248, 248, 248).to_index() == 231
+        assert (
+            Color.rgb(248, 248, 248).sgr(False, ColorSupport.EIGHT_BIT)
+            == "38;5;231"
+        )
+
     def test_rgb_to_16(self):
         assert _rgb_to_16(255, 0, 0) == 9
         assert _rgb_to_16(0, 0, 0) == 0

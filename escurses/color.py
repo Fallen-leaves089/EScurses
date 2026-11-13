@@ -279,11 +279,18 @@ class Color:
 def _rgb_to_256(r: int, g: int, b: int) -> int:
     # 灰阶（r == g == b）走 232-255 的 24 级灰阶，比 6x6x6 色立方更准
     if r == g == b:
-        if r < 8:
-            return 16
-        if r > 248:
+        # 同时考虑黑色（16）和白色（231）；灰阶索引本身只到 255。
+        best_index = 16
+        best_distance = r
+        for step in range(24):
+            level = 8 + step * 10
+            distance = abs(r - level)
+            if distance < best_distance:
+                best_index = 232 + step
+                best_distance = distance
+        if 255 - r < best_distance:
             return 231
-        return 232 + (r - 8) // 10
+        return best_index
     steps = (0, 95, 135, 175, 215, 255)
     ri = min(range(6), key=lambda i: abs(steps[i] - r))
     gi = min(range(6), key=lambda i: abs(steps[i] - g))
