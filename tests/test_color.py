@@ -73,6 +73,13 @@ class TestColor:
         color = Color.rgb(1, 2, 3)
         assert Color.parse(color) is color
 
+    def test_color_is_immutable(self):
+        color = Color.rgb(1, 2, 3)
+        with pytest.raises(AttributeError):
+            color.value = (4, 5, 6)
+        with pytest.raises(AttributeError):
+            del color.value
+
     def test_hashable(self):
         assert len({Color.named("red"), Color.index(1)}) == 1
 
@@ -170,6 +177,14 @@ class TestSGR:
         changed = style.replace(bold=True)
         assert changed.bold is True
         assert style.bold is False
+
+    def test_style_is_immutable(self):
+        style = Style(fg="red")
+        with pytest.raises(AttributeError):
+            style.fg = Color.default()
+        with pytest.raises(AttributeError):
+            del style.bold
+        assert style.body(ColorSupport.TRUECOLOR) == "0;31"
 
     def test_replace_unknown_field(self):
         with pytest.raises(TypeError):

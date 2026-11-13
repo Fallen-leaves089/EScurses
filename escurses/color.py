@@ -125,11 +125,23 @@ class Color:
     * :meth:`Color.rgb`   —— 24 位真彩。
     """
 
-    __slots__ = ("kind", "value")
+    __slots__ = ("kind", "value", "_frozen")
 
     def __init__(self, kind: str, value: object) -> None:
-        self.kind = kind
-        self.value = value
+        object.__setattr__(self, "_frozen", False)
+        object.__setattr__(self, "kind", kind)
+        object.__setattr__(self, "value", value)
+        object.__setattr__(self, "_frozen", True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Color 不可变；请创建新的 Color 实例")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name: str) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Color 不可变；请创建新的 Color 实例")
+        object.__delattr__(self, name)
 
     # ---- 工厂 ----------------------------------------------------------
     @classmethod
@@ -337,6 +349,7 @@ class Style:
         "reverse",
         "strike",
         "_cache",
+        "_frozen",
     )
 
     def __init__(
@@ -352,6 +365,7 @@ class Style:
         reverse: bool = False,
         strike: bool = False,
     ) -> None:
+        object.__setattr__(self, "_frozen", False)
         self.fg = Color.parse(fg) if fg is not None else Color.default()
         self.bg = Color.parse(bg) if bg is not None else Color.default()
         self.bold = bold
@@ -362,6 +376,17 @@ class Style:
         self.reverse = reverse
         self.strike = strike
         self._cache: Dict[int, str] = {}
+        object.__setattr__(self, "_frozen", True)
+
+    def __setattr__(self, name: str, value: object) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Style 不可变；请使用 replace() 创建新样式")
+        object.__setattr__(self, name, value)
+
+    def __delattr__(self, name: str) -> None:
+        if getattr(self, "_frozen", False):
+            raise AttributeError("Style 不可变；请使用 replace() 创建新样式")
+        object.__delattr__(self, name)
 
     # ---- 工厂 ----------------------------------------------------------
     @classmethod
@@ -371,7 +396,7 @@ class Style:
         给想直接手写转义序列的高级用户留的口子。
         """
         style = cls()
-        style._cache = {0: str(spec), 1: str(spec), 2: str(spec), 3: str(spec)}
+        style._cache.update({0: str(spec), 1: str(spec), 2: str(spec), 3: str(spec)})
         return style
 
     def replace(self, **changes: object) -> "Style":
